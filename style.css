@@ -1,0 +1,117 @@
+body {
+  background-color: #2A2A35;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.board {
+  width: 305px;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items:center;
+
+  background-color: #0f4c81;
+
+  border: 4px #656460 solid;
+  border-top: 2px lightgray solid;
+  margin-bottom: 10px;
+
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.boardTop {
+  /* display: flex; */
+  flex-direction:row;
+  justify-content:space-between;
+  /* align-items:center; */
+  margin-bottom: 0px;
+  border-bottom: 2px #656460 solid;
+}
+.numeral {
+  height: 30px;
+  width: 50px;
+  
+  font-family: Revalia;
+  color: crimson;
+  background-color: black;
+  
+  border: 2px #656460 solid;
+  padding-left: 4px;
+  padding-right: 4px;
+  margin: 4px;
+  /* margin-bottom: 2px; */
+
+  display:flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reset {
+  width: 30px;
+  height: 30px;
+  
+  font-size: 20px;
+  
+  border: 2px #656460 solid;
+  border-top: 1px lightgray solid;
+  border-left: 1px lightgray solid;
+  
+  display:flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reset-click {
+  border: 1px 656460 solid;
+  border-bottom: 1px lightgray solid;
+  border-right: 1px lightgray solid;
+}
+
+.field {
+  width: 30px;
+  height: 30px;
+  border: 2px #656460 solid;
+  border-top: 1px lightgray solid;
+  border-left: 1px lightgray solid;
+  display: flex;
+  justify-content: center;
+  align-items:center;
+  background-color:darkgray;
+  flex: 0 0 auto;
+  /* 
+  flex-grow: 0;
+  flex-shrink: 0; 
+  flex-basis: auto;
+  */
+}
+
+.digged {
+  background-color: gray;
+  /* border: 1px solid #5B5B5B; */
+}
+
+.mine {
+  background-color: red;
+}
+
+.btn {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.item {
+    height:30px;
+    text-align: center;
+    line-height: 30px;
+}
+
+.input-text {
+  width: 80px;
+}
