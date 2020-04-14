@@ -6,138 +6,156 @@ const gameStatus = {
 }
 
 const view = {
+  boardBottom: document.querySelector("#boardBottom"),
+  timerElement: document.getElementById("timer"),
+  resetBtn: document.querySelector(".reset"),
+  restMineCountElement: document.getElementById("restMineCount"),
+  face: document.getElementById("face"),
+  toDefault: document.getElementById("toDefault"),
+  customizeBtn: document.getElementById("customizeBtn"),
+  numOfRows: document.getElementById("numOfRows"),
+  numOfMines: document.getElementById("numOfMines"),
+  debugBoard: document.getElementById("debugBoard"),
+  debugBtn: document.getElementById("debugBtn"),
+  setRightClickBlocked() {
+    document.oncontextmenu = () => {
+      return false
+    }},
+  getFieldHtml(fieldIdx) {
+    return document.getElementById(fieldIdx);
+  },
   getBoardElement(fieldIdx) {
-    return ` <div class="field" id='${fieldIdx}' data-target="#boardBottom" data-id="${fieldIdx}"></div>`
+    return ` <div class="field d-flex justify-content-center align-items-center flex-{grow|shrink}-0" id='${fieldIdx}' data-target="#boardBottom" data-id="${fieldIdx}"></div>`;
   },
   /**
    * displayFields()
    * 顯示踩地雷的遊戲版圖在畫面上，
    * 輸入的 rows 是指版圖的行列數。
    */
-  displayFields(rows) {
-    document.querySelector('#boardBottom').innerHTML = rows.map(index => view.getBoardElement(index)).join('')
-    const boardWidth = (model.numberOfRows * 30) + 16
-    $('.board').css({ width: boardWidth})
-    if (boardWidth <= 160) $('.boardTop').css({width: '160px'})
+  displayFields(rows, numberOfRows) {
+    // document.querySelector('#boardBottom').innerHTML = rows.map(index => view.getBoardElement(index)).join('')
+    this.boardBottom.innerHTML = rows
+      .map((index) => view.getBoardElement(index))
+      .join("");
+    const boardWidth = numberOfRows * 30 + 16;
+    $(".board").css({ width: boardWidth });
+    if (boardWidth <= 160) $(".boardTop").css({ width: "160px" });
   },
   /**
    * showFieldContent()
    * 更改單一格子的內容，像是顯示數字、地雷，或是海洋。
    */
-  showFieldContent(fieldIdx) {
-    const field = controller.getFieldData(fieldIdx)
-    let fieldHtml = document.getElementById(fieldIdx)
-    fieldHtml.innerHTML = (field.type === "mine") ? `<i class="fas fa-bomb"></i>` : `${field.number}`
-    fieldHtml.classList.add('digged')
-    field.isDigged = true
-    if (field.type === "mine") fieldHtml.classList.add('mine')
+  showFieldContent(field) {
+    // const field = controller.getFieldData(fieldIdx)
+    // let fieldHtml = document.getElementById(field.fieldIdx)
+    let fieldHtml = this.getFieldHtml(field.fieldIdx);
+    fieldHtml.innerHTML =
+      field.type === "mine" ? `<i class="fas fa-bomb"></i>` : `${field.number}`;
+    fieldHtml.classList.add("digged");
+    field.isDigged = true;
+    if (field.type === "mine") fieldHtml.classList.add("mine");
   },
   /**
    * renderTime()
    * 顯示經過的遊戲時間在畫面上。
    */
   renderTime(time) {
-    if (time > 999) time = 999
-    let timeString = time.toString()
-    for (let i = 3; i > time.toString().length; i--) timeString = "0" + timeString
-    let timer = document.getElementById('timer')
-    timer.innerHTML = `${timeString}`
+    if (time > 999) time = 999;
+    let timeString = time.toString();
+    for (let i = 3; i > time.toString().length; i--)
+      timeString = "0" + timeString;
+    let timer = view.timerElement;
+    timer.innerHTML = `${timeString}`;
   },
   renderMineCount(number) {
-    let restMines = ""
+    let restMines = "";
     if (number < 0) {
-      number = Math.abs(number)
-      if (number > 99) number = 99
-      restMines = number.toString()
-      for (let i = 2; i > number.toString().length; i--) restMines = "0" + restMines
-      restMines = "-" + restMines
+      number = Math.abs(number);
+      if (number > 99) number = 99;
+      restMines = number.toString();
+      for (let i = 2; i > number.toString().length; i--)
+        restMines = "0" + restMines;
+      restMines = "-" + restMines;
     } else {
-      restMines = number.toString()
-      for (let i = 3; i > number.toString().length; i--) restMines = "0" + restMines
+      restMines = number.toString();
+      for (let i = 3; i > number.toString().length; i--)
+        restMines = "0" + restMines;
     }
-    let restMineCount = document.getElementById('restMineCount')
-    restMineCount.innerHTML = `${restMines}`
+    let restMineCount = view.restMineCountElement;
+    restMineCount.innerHTML = `${restMines}`;
   },
   /**
    * showBoard()
    * 遊戲結束時，或是 debug 時將遊戲的全部格子內容顯示出來。
    */
-  showBoard(fieldNum) {
-    const diggedField = controller.getFieldData(fieldNum)
-    if (diggedField.type !== "mine") fieldNum = ""
+  showBoard(fieldIdx) {
+    // const diggedField = controller.getFieldData(fieldIdx);
+    // if (diggedField.type !== "mine") fieldIdx = "";
 
-    model.fields.forEach (field => {
+    model.fields.forEach((item) => {
       // 踩到地雷而結束遊戲時，被踩到的地雷背景為紅色，這部分不動
-      if (field.fieldIdx === fieldNum) return;
-      
-      let fieldHtml = document.getElementById(field.fieldIdx)
-      fieldHtml.innerHTML = (field.type === "mine") ? `<i class="fas fa-bomb"></i>` : `${field.number}`
-      if (!field.isDigged) {
-        fieldHtml.classList.add('digged')
-        field.isDigged = true
+      if (item.fieldIdx === fieldIdx) return;
+
+      // let fieldHtml = document.getElementById(field.fieldIdx)
+      let fieldHtml = view.getFieldHtml(item.fieldIdx);
+      fieldHtml.innerHTML =
+        item.type === "mine" ? `<i class="fas fa-bomb"></i>` : `${item.number}`;
+      if (!item.isDigged) {
+        fieldHtml.classList.add("digged");
+        item.isDigged = true;
       }
-    })
+    });
   },
   /** Debug Board */
-  displayDebugBoard(debugBoard) {
-    let debugBoardHtml = ""
-    let content = ""
-    for (i = 0; i < model.fields.length; i++) {
-      content = (isNaN(model.fields[i].number)) ? `<i class="fas fa-bomb"></i>` : `${ model.fields[i].number }`
-      debugBoardHtml += ` <div class="field" >${content}</div>`
+  setDebugBoard(fields) {
+    let debugBoardHtml = "";
+    let content = "";
+    for (i = 0; i < fields.length; i++) {
+      content = isNaN(fields[i].number)
+        ? `<i class="fas fa-bomb"></i>`
+        : `${fields[i].number}`;
+      debugBoardHtml += ` <div class="field d-flex justify-content-center align-items-center flex-{grow|shrink}-0" >${content}</div>`;
     }
-    debugBoard.innerHTML = debugBoardHtml
-  },
-  /** Show message for fail or success the challenge */
-  showMessage(message){
-    if (message === undefined) {
-      switch (model.currentStatus) {
-        case 'gameFinished':
-          message = model.messages[model.currentStatus]
-          break
-        case 'gameFailed':
-          message = model.messages[model.currentStatus]
-          break
-        default:
-          break
-      }
-    } 
-    alert(message)
+    view.debugBoard.innerHTML = debugBoardHtml;
   },
   /** Hind selected flag and return false */
-  removeFlag(target){
-    target.parentNode.removeChild(target.parentNode.childNodes[0])
-    return false
+  removeFlag(target) {
+    if (target.matches(".fas")) target.parentNode.removeChild(target);
+    else target.removeChild(target.childNodes[0]);
   },
   /** Put flag on the board and return true */
-  showFlag(target){
-    target.innerHTML = `<i class="fas fa-flag" data-id="${target.dataset.id}"></i>`
-    return true
+  showFlag(target) {
+    target.innerHTML = `<i class="fas fa-flag flagged d-flex justify-content-center align-items-center" data-id="${target.dataset.id}"></i>`;
+    // return true
   },
   /** show/hind debug board */
-  toggleDebugBoard(debugBoard) {  
-    debugBoard.style.display = (debugBoard.style.display === "none") ? "flex" : "none"
+  toggleDebugBoard(debugBoard) {
+    debugBoard.style.display = (debugBoard.style.display === "none") ? "flex" : "none";
+    console.log("debugBoard", debugBoard);
   },
-  setFace(currentStatus) {
-    document.getElementById('face').innerHTML = (currentStatus === undefined) ? model.emojis[model.currentStatus] : model.emojis[currentStatus]
+  showFace(emoji) {
+    view.face.innerHTML = emoji;
   },
   setModalPlaceholder() {
-    $("#numOfMines").focus(function() {
-      let numberOfRows = document.getElementById("numOfRows").value
-      numberOfRows = Number(numberOfRows)
-      if (numberOfRows !== 0) {
-        let maxMineNum = Math.pow(numberOfRows - 1, 2)
-        if (maxMineNum < 2) maxMineNum = 2
-        this.setAttribute("placeholder", `2 ~ ${maxMineNum - 1}`);
-        this.readOnly = false
-      }
-    }).blur(function() {
-      if (!$("#numOfMines").val()) {
-        this.setAttribute("placeholder", "請先輸入Rows");
-        this.readOnly = true
-      }
-    })
-  }
+    $("#numOfMines")
+      .focus(function () {
+        // let numberOfRows = document.getElementById("numOfRows").value
+        let numberOfRows = Number(view.numOfRows.value);
+        // numberOfRows = Number(numberOfRows)
+        if (numberOfRows !== 0) {
+          let maxMineNum = Math.pow(numberOfRows - 1, 2);
+          if (maxMineNum < 2) maxMineNum = 2;
+          this.setAttribute("placeholder", `2 ~ ${maxMineNum - 1}`);
+          this.readOnly = false;
+        }
+      })
+      .blur(function () {
+        if (!$("#numOfMines").val()) {
+          this.setAttribute("placeholder", "請先輸入Rows");
+          this.readOnly = true;
+        }
+      });
+  },
 };
 
 const controller = {
@@ -151,130 +169,135 @@ const controller = {
    *   4. 綁定事件監聽器到格子上
    */
   createGame(numberOfRows, numberOfMines) {
-    this.setGame(numberOfRows, numberOfMines)
+    this.setGame(numberOfRows, numberOfMines);
+    this.setClick();
     // setup buttons
-    this.setToggleDebugBtn()
-    this.setResetBtn()
-    this.setCustomizeBtn()
-    this.setDefaultBtn()
-    view.setModalPlaceholder()
-    document.oncontextmenu = function () { return false; };
+    this.setToggleDebugBtn();
+    this.setResetBtn();
+    this.setCustomizeBtn();
+    this.setDefaultBtn();
+    view.setModalPlaceholder();
+    view.setRightClickBlocked();
   },
   setGame(numberOfRows, numberOfMines) {
-    model.currentStatus = gameStatus.firstPressAwaits  
-    model.numberOfRows = numberOfRows
-    model.numberOfMines = numberOfMines
+    model.currentStatus = gameStatus.firstPressAwaits;
+    model.numberOfRows = numberOfRows;
+    model.numberOfMines = numberOfMines;
     // 1. 顯示遊戲畫面
-    const rows = utility.getRandomNumberArray(Math.pow(model.numberOfRows, 2))
-    view.displayFields(rows)
-    view.setFace()
+    const rows = utility.getRandomNumberArray(Math.pow(model.numberOfRows, 2));
+    view.displayFields(rows, model.numberOfRows);
+
+    view.showFace(model.emojis[model.currentStatus]);
     // 2. 遊戲計時
-    clearInterval(model.timerID)
-    view.renderTime(model.time = 0)
+    clearInterval(model.timerID);
+    view.renderTime((model.time = 0));
     // 3. 埋地雷 (先全部設定成ocean, 再填入mine, 最後計算number)
-    model.initFields(rows)
-    this.setMinesAndFields(model.numberOfMines)
-    model.setRestMineCount()
+    model.initFields(rows);
+    this.setMinesAndFields(model.numberOfMines);
+    const restMine = model.setRestMineCount();
+    view.renderMineCount(restMine);
     // 4. 綁定事件監聽器到格子上
-    this.setClick()
+    // this.setClick()
     //Reset debug board
-    this.setDebugBoard()
+    view.setDebugBoard(model.fields);
   },
   setDefaultBtn() {
-    document.getElementById('toDefault').addEventListener('click', event => {
+    view.toDefault.addEventListener("click", (event) => {
       event.preventDefault();
-      this.setGame(model.defaultSettings.rows, model.defaultSettings.mines)
-    })
+      this.setGame(model.defaultSettings.rows, model.defaultSettings.mines);
+    });
   },
   setCustomizeBtn() {
-    document.getElementById("customizeBtn").addEventListener("click", event => {
+    view.customizeBtn.addEventListener("click", (event) => {
       event.preventDefault();
-      let numberOfRows = document.getElementById("numOfRows").value
-      let numberOfMines = document.getElementById("numOfMines").value
-      numberOfRows = Number(numberOfRows)
-      numberOfMines = Number(numberOfMines)
+      let numberOfRows = Number(view.numOfRows.value);
+      let numberOfMines = Number(view.numOfMines.value);
+      // numberOfRows = Number(numberOfRows)
+      // numberOfMines = Number(numberOfMines)
       //檢查輸入的值是否為正整數
-      let result = utility.checkInt(numberOfRows) && utility.checkInt(numberOfMines)
+      let result =
+        utility.checkInt(numberOfRows) && utility.checkInt(numberOfMines);
       if (!result) {
-        view.showMessage(model.showMessage.checkInt)
+        controller.showMessage(model.messages.checkInt);
         return;
       }
       //Row的最小值應為3
       if (numberOfRows < 3) {
-        numberOfRows = 3
-        view.showMessage(model.messages.checkRowNum)
+        numberOfRows = 3;
+        controller.showMessage(model.messages.checkRowNum);
         return;
       }
       //檢查地雷數
-      result = model.checkMineNumber(numberOfRows, numberOfMines)
+      result = model.checkMineNumber(numberOfRows, numberOfMines);
       if (result !== "true") {
-        view.showMessage(result)
+        controller.showMessage(result);
         return;
       } else {
-        this.setGame(numberOfRows, numberOfMines)
+        this.setGame(numberOfRows, numberOfMines);
       }
-    })
+    });
   },
   setResetBtn() {
-    const resetBtn = document.querySelector('.reset')
-    resetBtn.addEventListener('click', (event) => {
-      this.setGame(model.numberOfRows, model.numberOfMines)
-    })
+    view.resetBtn.addEventListener("click", (event) => {
+      this.setGame(model.numberOfRows, model.numberOfMines);
+    });
   },
   /** Set (1) left click for dig; (2) right click for put/hind flag*/
   setClick() {
-    const boardBottom = document.getElementById('boardBottom')
-    boardBottom.addEventListener('click', (event) => {
-      const field = this.getFieldData(Number(event.target.dataset.id))
+    view.boardBottom.addEventListener("click", (event) => {
+      const field = model.getFieldData(Number(event.target.dataset.id));
+      
       /** set left click event listener */
       if (field.isDigged === true || field.isFlag === true) return;
-      this.dig(field)
-    })
-    boardBottom.addEventListener('contextmenu', () => {
-      const field = this.getFieldData(Number(event.target.dataset.id))
+      this.dig(field);
+    });
+    view.boardBottom.addEventListener("contextmenu", (event) => {
+      const field = model.getFieldData(Number(event.target.dataset.id));
       if (field.isDigged) return;
-      field.isFlag = (field.isFlag) ? view.removeFlag(event.target) : view.showFlag(event.target)
-      model.setRestMineCount()
-    })
-    boardBottom.addEventListener('mousedown', () => view.setFace("scream"))
-    boardBottom.addEventListener('mouseup', () => view.setFace())
+      if (field.isFlag) {
+        view.removeFlag(event.target);
+        field.isFlag = false;
+      } else {
+        view.showFlag(event.target);
+        field.isFlag = true;
+      }
+      const restMine = model.setRestMineCount();
+      view.renderMineCount(restMine);
+    });
+    view.boardBottom.addEventListener("mousedown", () =>
+      view.showFace(model.emojis["scream"])
+    );
+    view.boardBottom.addEventListener("mouseup", () =>
+      view.showFace(model.emojis[model.currentStatus])
+    );
   },
-  /** Set Debug board for show hind mines and numbers */
-  setDebugBoard() {
-    const debugBoard = document.getElementById("debugBoard")
-    view.displayDebugBoard(debugBoard);
-  },
-  setToggleDebugBtn(){
-    const debugBoard = document.getElementById("debugBoard")
-    document.getElementById("debugBtn").addEventListener("click", () => view.toggleDebugBoard(debugBoard))
+  setToggleDebugBtn() {
+    view.debugBtn.addEventListener("click", () => {
+         view.toggleDebugBoard(view.debugBoard);
+    });
   },
   /**
    * setMinesAndFields()
    * 設定格子的內容，以及產生地雷的編號。
    */
   setMinesAndFields(numberOfMines) {
-    model.mines.length = 0
+    model.mines.length = 0;
     for (i = 0; i < numberOfMines; i++) {
-      let mine = this.getFieldData(i)
+      let mine = model.getFieldData(i);
       //update model.mines
-      model.mines.push(mine.position)
+      model.mines.push(mine.position);
       //update model.fields
-      mine.type = "mine"
-      mine.number = NaN
+      mine.type = "mine";
+      mine.number = NaN;
       //update 地雷周邊數字
-      const surroundIndexes = utility.getSurroundIndex(mine.position, model.numberOfRows)
-      model.updateNum(surroundIndexes)
+      const surroundIndexes = utility.getSurroundIndex(
+        mine.position,
+        model.numberOfRows
+      );
+      model.updateNum(surroundIndexes);
     }
   },
-  /**
-   * getFieldData()
-   * 取得單一格子的內容，決定這個格子是海洋還是號碼，
-   * 如果是號碼的話，要算出這個號碼是幾號。
-   * （計算周圍地雷的數量）
-   */
-  getFieldData(fieldIdx) {
-    return model.fields.find(field => field.fieldIdx === fieldIdx)
-  },
+
   /**
    * dig()
    * 使用者挖格子時要執行的函式，
@@ -283,59 +306,92 @@ const controller = {
    * 如果是地雷      => 遊戲結束
    */
   dig(field) {
-    const position = field.position
+    const position = field.position;
     //第一次不踩雷
     if (model.currentStatus === gameStatus.firstPressAwaits) {
       if (model.isMine(position)) {
-        model.switchMine(field)
-        this.setDebugBoard()
+        model.switchMine(field);
+        view.setDebugBoard(model.fields);
       }
-      model.setTimer()
-    } 
+      // start from 1 sec
+      view.renderTime((model.time = 1));
+      model.setTimer();
+    }
     // 開啟格子
-    view.showFieldContent(field.fieldIdx)
+    // view.showFieldContent(field.fieldIdx)
+    view.showFieldContent(field);
     switch (field.type) {
       case "ocean":
-        this.spreadOcean(field)
-        model.currentStatus = (this.isFinished()) ? gameStatus.gameFinished : gameStatus.secondPressAwaits
-        break
+        this.spreadOcean(field);
+        model.currentStatus = this.isFinished()
+          ? gameStatus.gameFinished
+          : gameStatus.secondPressAwaits;
+        break;
       case "mine":
-        model.currentStatus = gameStatus.gameFailed
-        break
+        model.currentStatus = gameStatus.gameFailed;
+        break;
       default:
-        model.currentStatus = (this.isFinished()) ? gameStatus.gameFinished : gameStatus.secondPressAwaits
-        break
+        model.currentStatus = this.isFinished()
+          ? gameStatus.gameFinished
+          : gameStatus.secondPressAwaits;
+        break;
     }
     // 檢查是否結束遊戲
-    if (model.currentStatus === gameStatus.gameFailed || model.currentStatus === gameStatus.gameFinished) this.gameClose(field)
+    if (
+      model.currentStatus === gameStatus.gameFailed ||
+      model.currentStatus === gameStatus.gameFinished
+    )
+      this.gameClose(field);
   },
-  isFinished(){
-    const nonMineFields = model.fields.filter(field => field.type !== "mine")
-    const result = nonMineFields.every(field => field.isDigged === true)
-    return result
+  isFinished() {
+    const nonMineFields = model.fields.filter((field) => field.type !== "mine");
+    const result = nonMineFields.every((field) => field.isDigged === true);
+    return result;
   },
-  gameClose(field){
-    clearInterval(model.timerID)
-    view.showBoard(field.fieldIdx)
-    view.showMessage()
-    document.getElementById('face').innerHTML = model.emojis[model.currentStatus] 
+  gameClose(field) {
+    clearInterval(model.timerID);
+
+    const diggedFiledIdx = model.isMine(field.position) ? field.fieldIdx : -1;
+    view.showBoard(diggedFiledIdx);
+    view.showMessage();
+    view.face.innerHTML = model.emojis[model.currentStatus];
   },
   spreadOcean(field) {
-    const surroundIndexes = utility.getSurroundIndex(field.position, model.numberOfRows)
-    surroundIndexes.forEach(value => {
-      const surroundField = this.getFieldData(value)
+    const surroundIndexes = utility.getSurroundIndex(
+      field.position,
+      model.numberOfRows
+    );
+    surroundIndexes.forEach((value) => {
+      const surroundField = model.getFieldData(value);
       //插旗子的格子、已挖過的格子不處理
       if (!surroundField.isFlag && !surroundField.isDigged) {
-        view.showFieldContent(value) 
-        if (surroundField.type === "ocean") this.spreadOcean(surroundField)
+        // view.showFieldContent(value)
+        view.showFieldContent(surroundField);
+        if (surroundField.type === "ocean") this.spreadOcean(surroundField);
       }
-    })
-  }
+    });
+  },
+  /** Show message for fail or success the challenge */
+  showMessage(message) {
+    if (message === undefined) {
+      switch (model.currentStatus) {
+        case "gameFinished":
+          message = model.messages[model.currentStatus];
+          break;
+        case "gameFailed":
+          message = model.messages[model.currentStatus];
+          break;
+        default:
+          break;
+      }
+    }
+    alert(message);
+  },
 };
 
 const model = {
-  currentStatus: 'firstPressAwaits',
-  defaultSettings: {rows: 9, mines: 10},
+  currentStatus: "firstPressAwaits",
+  defaultSettings: { rows: 9, mines: 10 },
   /**
    * mines
    * 存放地雷的編號（第幾個格子）
@@ -347,7 +403,7 @@ const model = {
    * {
    *  "position": position, default: 1 ~ 81
    *  "fieldIdx" : index, default: 0 ~ 80
-   *  "type" : "ocean", 
+   *  "type" : "ocean",
    *  "number" : "",
    *  "isDigged": false,
    *  "isFlag": false
@@ -359,15 +415,15 @@ const model = {
   time: 0,
   timerID: 0,
   messages: {
-    checkInt: 'Please type in the positive integer.',
-    checkMineNum: 'Bombs should be set up between 2 and ',
-    checkRowNum: 'Rows should be more than 2',
-    gameFinished: 'Congratulations, You win the game!',
-    gameFailed: 'Oh, here is a mine, you lose!'
+    checkInt: "Please type in the positive integer.",
+    checkMineNum: "Bombs should be set up between 2 and ",
+    checkRowNum: "Rows should be more than 2",
+    gameFinished: "Congratulations, You win the game!",
+    gameFailed: "Oh, here is a mine, you lose!",
   },
   /** 初始化 Model.Fields */
   initFields(rows) {
-    this.fields.length = 0
+    this.fields.length = 0;
     rows.forEach((value, index) => {
       const field = {
         position: index + 1,
@@ -375,11 +431,12 @@ const model = {
         type: "ocean",
         number: "",
         isDigged: false,
-        isFlag: false
-      }
-      this.fields.push(field)
-    })
+        isFlag: false,
+      };
+      this.fields.push(field);
+    });
   },
+  
   /**
    * isMine()
    * 輸入一個格子編號，並檢查這個編號是否是地雷
@@ -388,66 +445,82 @@ const model = {
     return this.mines.includes(position);
   },
   switchMine(field) {
-    const tempFields = model.fields.filter(item => item.type !== "mine")
+    const tempFields = model.fields.filter((item) => item.type !== "mine");
     const randomIndex = Math.floor(Math.random() * tempFields.length);
-    let newField = tempFields[randomIndex]
-      ;[field['type'], newField['type']] = [newField['type'], field['type']]
-      ;[field['number'], newField['number']] = [newField['number'], field['number']]
-        // * "isDigged": false, --> 第一次一定沒有挖過
-        // * "isFlag": false --> 旗子跟著位置走 不用換
+    let newField = tempFields[randomIndex];
+    [field["type"], newField["type"]] = [newField["type"], field["type"]];
+    [field["number"], newField["number"]] = [
+      newField["number"],
+      field["number"],
+    ];
+    // * "isDigged": false, --> 第一次一定沒有挖過
+    // * "isFlag": false --> 旗子跟著位置走 不用換
+
+    // this.updateSwitchNum(field, newField)
+
     //update number (舊地雷的周邊數字減1)
-    let surroundIndexes = utility.getSurroundIndex(field.position, model.numberOfRows)
-    let surroundMineCount = 0
-    surroundIndexes.forEach(value => {
-      let surroundField = controller.getFieldData(value)
+    let surroundIndexes = utility.getSurroundIndex(
+      field.position,
+      model.numberOfRows
+    );
+    let surroundMineCount = 0;
+    surroundIndexes.forEach((value) => {
+      let surroundField = model.getFieldData(value);
       if (surroundField.type === "mine") {
-        surroundMineCount++
+        surroundMineCount++;
         return;
-      } 
-      surroundField.number--
-      if (surroundField.number === 0) {
-        surroundField.type = "ocean"
-        surroundField.number = ""
       }
-    })
+      surroundField.number--;
+      if (surroundField.number === 0) {
+        surroundField.type = "ocean";
+        surroundField.number = "";
+      }
+    });
     //update number (新地雷的周邊數字加1)
-    surroundIndexes = utility.getSurroundIndex(newField.position, model.numberOfRows)
-    model.updateNum(surroundIndexes)
+    surroundIndexes = utility.getSurroundIndex(
+      newField.position,
+      model.numberOfRows
+    );
+    model.updateNum(surroundIndexes);
     //update number (舊地雷原本的位置)
     if (surroundMineCount === 0) {
-      field.type = "ocean"
-      field.number = ""
+      field.type = "ocean";
+      field.number = "";
     } else {
-      field.type = "number"
-      field.number = surroundMineCount
+      field.type = "number";
+      field.number = surroundMineCount;
     }
     //update model.mines
-    const oldPosition = model.mines.indexOf(field.position)
-    model.mines[oldPosition] = newField.position
+    model.updateMinesList(field, newField);
+  },
+  /** update model.mines */
+  updateMinesList(oldField, newField) {
+    const oldPosition = model.mines.indexOf(oldField.position);
+    model.mines[oldPosition] = newField.position;
   },
   /** 如果不是地雷，更新該顯示的數字 */
   updateNum(surroundIndexes) {
-    surroundIndexes.forEach(value => {
-      let surroundField = controller.getFieldData(value)
+    surroundIndexes.forEach((value) => {
+      let surroundField = model.getFieldData(value);
       if (surroundField.type === "mine") return;
-      surroundField.type = "number"
-      surroundField.number++
-    })
+      surroundField.type = "number";
+      surroundField.number++;
+    });
   },
   emojis: {
-    "firstPressAwaits": "🙂",
-    "secondPressAwaits": "🙂",
-    "gameFailed": "😵",
-    "scream": "😱",
-    "surprise": "😮",
-    "gameFinished": "😎",
+    firstPressAwaits: "🙂",
+    secondPressAwaits: "🙂",
+    gameFailed: "😵",
+    scream: "😱",
+    surprise: "😮",
+    gameFinished: "😎",
   },
   /** 檢查地雷數量
    * role: 1 < 地雷數 < (列數-1)^2
    */
   checkMineNumber(numberOfRows, numberOfMines) {
-    const maxMineNum = Math.pow(numberOfRows - 1, 2)
-    const message = `${this.messages.checkMineNum}${maxMineNum-1}`
+    const maxMineNum = Math.pow(numberOfRows - 1, 2);
+    const message = `${this.messages.checkMineNum}${maxMineNum - 1}`;
     if (numberOfMines > 1 && numberOfMines < maxMineNum) {
       return "true";
     } else {
@@ -456,14 +529,23 @@ const model = {
   },
   setTimer() {
     this.timerID = setInterval(() => {
-      this.time += 1
-      view.renderTime(this.time)
-    }, 1000)
+      this.time += 1;
+      view.renderTime(this.time);
+    }, 1000);
   },
   setRestMineCount() {
-    const flagCount = model.fields.filter(field => field.isFlag === true).length
-    const mineCount = model.mines.length
-    view.renderMineCount(mineCount - flagCount)
+    const flagCount = model.fields.filter((field) => field.isFlag === true).length;
+    const mineCount = model.mines.length;
+    return mineCount - flagCount;
+  },
+  /**
+   * getFieldData()
+   * 取得單一格子的內容，決定這個格子是海洋還是號碼，
+   * 如果是號碼的話，要算出這個號碼是幾號。
+   * （計算周圍地雷的數量）
+   */
+  getFieldData(fieldIdx) {
+    return model.fields.find((field) => field.fieldIdx === fieldIdx);
   },
 };
 

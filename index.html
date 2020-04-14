@@ -12,9 +12,9 @@
 <body>
   <!-- <body onContextMenu="window.event.returnValue=false"> -->
 <div class="container" >
-  <div class="game">
+  <div class="d-flex justify-content-center align-items-center flex-column">
     <!-- Buttons -->
-    <div>
+    <div class="my-2">
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#show-detail-modal">
           Customize
         </button>
@@ -24,19 +24,19 @@
         <button type="button" class="btn btn-primary" id="debugBtn">Debug Mode</button>
     </div>
     <!-- Board Top -->
-    <div class="board boardTop ">
-      <div class="numeral" id="timer">000</div>
+    <div class="board boardTop d-flex justify-content-between align-items-center flex-row py-1">
+      <div class="numeral d-flex justify-content-center align-items-center px-2 m-1" id="timer">000</div>
       <div class="reset ">
-        <div id="face">🙂</div>
+        <div class="d-flex justify-content-center align-items-center" id="face">🙂</div>
       </div>
-      <div class="numeral" id="restMineCount">000</div>
+      <div class="numeral d-flex justify-content-center align-items-center px-2 m-1" id="restMineCount">000</div>
     </div>
     <!-- Board Bottom -->
-    <div class="board" id="boardBottom"></div>
+    <div class="board d-flex justify-content-center align-items-center flex-wrap py-2 mb-3" id="boardBottom"></div>
   </div>
-  <div class="game">
+  <div class="d-flex justify-content-center align-items-center flex-column">
     <!-- Debug Board -->
-    <div class="board" id="debugBoard"></div>
+    <div class="board  justify-content-center align-items-center flex-wrap py-2" id="debugBoard" style="display: none;"></div>
   </div>
 </div>
 <!-- Modal -->
