@@ -5,11 +5,6 @@ const gameStatus = {
   gameFinished: 'gameFinished'
 }
 
-const settings = {
-  defaultSettings: { rows: 9, mines: 10 },
-  currentSettings: { rows: 9, mines: 10 }
-};
-
 const view = {
   boardBottom: document.querySelector("#boardBottom"),
   timerElement: document.getElementById("timer"),
@@ -173,31 +168,34 @@ const controller = {
     view.setRightClickBlocked();
   },
   setGame(numberOfRows, numberOfMines) {
-    model.currentStatus = gameStatus.firstPressAwaits;
-    settings.currentSettings.rows = numberOfRows;
-    settings.currentSettings.mines = numberOfMines;
+    model.setCurrentStatus("firstPressAwaits");
+    model.setSettings('current', 'rows', numberOfRows)
+    model.setSettings('current', 'mines', numberOfMines)
+  
     // 1. 顯示遊戲畫面
-    const rows = utility.getRandomNumberArray(Math.pow(settings.currentSettings.rows, 2));
-    view.displayFields(rows, settings.currentSettings.rows);
+    // const rows = utility.getRandomNumberArray(Math.pow(model.currentSettings.rows, 2));
+    // view.displayFields(rows, model.currentSettings.rows);
+    const rows = utility.getRandomNumberArray(Math.pow(numberOfRows, 2));
+    view.displayFields(rows, numberOfRows);
 
-    view.showFace(model.emojis[model.currentStatus]);
+    view.showFace(model.getEmoji());
     // 2. 遊戲計時
-    clearInterval(model.timerID);
-    view.renderTime((model.time = 0));
+    clearInterval(model.getTimerID());
+    view.renderTime(model.setTime(0));
     // 3. 埋地雷 (先全部設定成ocean, 再填入mine, 最後計算number)
     model.initFields(rows);
-    this.setMinesAndFields(settings.currentSettings.mines);
+    this.setMinesAndFields(model.getSettings('current', 'mines'));
     const restMine = model.setRestMineCount();
     view.renderMineCount(restMine);
     // 4. 綁定事件監聽器到格子上
     // this.setClick()
     //Reset debug board
-    view.setDebugBoard(model.fields);
+    view.setDebugBoard(model.getFields());
   },
   setDefaultBtn() {
     view.toDefault.addEventListener("click", (event) => {
       event.preventDefault();
-      this.setGame(settings.defaultSettings.rows, settings.defaultSettings.mines);
+      this.setGame(model.getSettings('default', 'rows'), model.getSettings('default', 'mines'));
     });
   },
   setCustomizeBtn() {
@@ -209,13 +207,13 @@ const controller = {
       let result =
         utility.checkInt(numberOfRows) && utility.checkInt(numberOfMines);
       if (!result) {
-        controller.showMessage(model.messages.checkInt);
+        controller.showMessage(model.getMessage('checkInt'));
         return;
       }
       //Row的最小值應為3
       if (numberOfRows < 3) {
         numberOfRows = 3;
-        controller.showMessage(model.messages.checkRowNum);
+        controller.showMessage(model.getMessage('checkRowNum'));
         return;
       }
       //檢查地雷數
@@ -230,14 +228,14 @@ const controller = {
   },
   setResetBtn() {
     view.resetBtn.addEventListener("click", () => {
-      this.setGame(settings.currentSettings.rows, settings.currentSettings.mines);
+      this.setGame(model.getSettings('current', 'rows'), model.getSettings('current', 'mines'));
     });
   },
   /** Set (1) left click for dig; (2) right click for put/hind flag*/
   setClick() {
     view.boardBottom.addEventListener("click", (event) => {
       const field = model.getFieldData(Number(event.target.dataset.id));
-      
+      console.log("filed",field)
       /** set left click event listener */
       if (field.isDigged === true || field.isFlag === true) return;
       this.dig(field);
@@ -256,11 +254,12 @@ const controller = {
       view.renderMineCount(restMine);
     });
     view.boardBottom.addEventListener("mousedown", () =>
-      view.showFace(model.emojis["scream"])
+      view.showFace(model.getEmoji('scream'))
     );
-    view.boardBottom.addEventListener("mouseup", () =>
-      view.showFace(model.emojis[model.currentStatus])
-    );
+    view.boardBottom.addEventListener("mouseup", () => {
+      const status = model.getCurrentStatus
+      view.showFace(model.getEmoji(status))
+    });
   },
   setToggleDebugBtn() {
     view.debugBtn.addEventListener("click", () => {
@@ -272,21 +271,21 @@ const controller = {
    * 設定格子的內容，以及產生地雷的編號。
    */
   setMinesAndFields(numberOfMines) {
-    model.mines.length = 0;
+    const mines = []
+    // model.mines.length = 0;
     for (i = 0; i < numberOfMines; i++) {
       let mine = model.getFieldData(i);
       //update model.mines
-      model.mines.push(mine.position);
+      // model.mines.push(mine.position);
+      mines.push(mine.position)
       //update model.fields
       mine.type = "mine";
       mine.number = NaN;
       //update 地雷周邊數字
-      const surroundIndexes = utility.getSurroundIndex(
-        mine.position,
-        settings.currentSettings.rows
-      );
+      const surroundIndexes = utility.getSurroundIndex(mine.position, model.getSettings('current', 'rows'));
       model.updateNum(surroundIndexes);
     }
+    model.setMines(mines)
   },
 
   /**
@@ -298,14 +297,17 @@ const controller = {
    */
   dig(field) {
     const position = field.position;
+    let currentStatus = model.getCurrentStatus()
+    
     //第一次不踩雷
-    if (model.currentStatus === gameStatus.firstPressAwaits) {
+    if (currentStatus === gameStatus.firstPressAwaits) {
       if (model.isMine(position)) {
         model.switchMine(field);
-        view.setDebugBoard(model.fields);
+        view.setDebugBoard(model.getFields());
       }
       // start from 1st sec
-      view.renderTime((model.time = 1));
+      model.setTime(1)
+      view.renderTime(model.getTime());
       model.setTimer();
     }
     // 開啟格子
@@ -313,36 +315,36 @@ const controller = {
     switch (field.type) {
       case "ocean":
         this.spreadOcean(field);
-        model.currentStatus = this.isFinished() ? gameStatus.gameFinished : gameStatus.secondPressAwaits;
+        currentStatus = this.isFinished() ? gameStatus.gameFinished : gameStatus.secondPressAwaits;
         break;
       case "mine":
-        model.currentStatus = gameStatus.gameFailed;
+        currentStatus = gameStatus.gameFailed;
         break;
       default:
-        model.currentStatus = this.isFinished() ? gameStatus.gameFinished : gameStatus.secondPressAwaits;
+        currentStatus = this.isFinished() ? gameStatus.gameFinished : gameStatus.secondPressAwaits;
         break;
     }
-    console.log("currentStatus", model.currentStatus);
+    model.setCurrentStatus(currentStatus)
     // 檢查是否結束遊戲
-    if (model.currentStatus === gameStatus.gameFailed || model.currentStatus === gameStatus.gameFinished)
+    if (currentStatus === gameStatus.gameFailed || currentStatus === gameStatus.gameFinished)
       this.gameClose(field);
   },
   isFinished() {
-    const nonMineFields = model.fields.filter((field) => field.type !== "mine");
-    const result = nonMineFields.every((field) => field.isDigged === true);
+    const nonMineFields = model.getFields().filter((item) => item.type !== "mine");
+    const result = nonMineFields.every((item) => item.isDigged === true);
     return result;
   },
   gameClose(field) {
-    clearInterval(model.timerID);
+    clearInterval(model.getTimerID());
     const diggedFiledIdx = model.isMine(field.position) ? field.fieldIdx : -1;
     view.showBoard(diggedFiledIdx);
     controller.showMessage();
-    view.face.innerHTML = model.emojis[model.currentStatus];
+    view.face.innerHTML = model.getEmoji(model.getCurrentStatus())
   },
   spreadOcean(field) {
     const surroundIndexes = utility.getSurroundIndex(
       field.position,
-      settings.currentSettings.rows
+      model.getSettings('current', 'rows')
     );
     surroundIndexes.forEach((value) => {
       const surroundField = model.getFieldData(value);
@@ -357,12 +359,12 @@ const controller = {
   /** Show message for fail or success the challenge */
   showMessage(message) {
     if (message === undefined) {
-      switch (model.currentStatus) {
+      switch (model.getCurrentStatus()) {
         case "gameFinished":
-          message = model.messages[model.currentStatus];
+          message = model.getMessage("gameFinished");
           break;
         case "gameFailed":
-          message = model.messages[model.currentStatus];
+          message = model.getMessage("gameFailed")
           break;
         default:
           break;
@@ -374,6 +376,40 @@ const controller = {
 
 const model = {
   currentStatus: "firstPressAwaits",
+  setCurrentStatus(status){
+    model.currentStatus = gameStatus[status]
+  },
+  getCurrentStatus(){
+    return model.currentStatus
+  },
+  defaultSettings: { rows: 9, mines: 10 },
+  currentSettings: { rows: 9, mines: 10 },
+  setSettings(type, setting, value){
+    switch (type) {
+      case 'default':
+        model.defaultSettings[setting] = value
+        break;
+      case 'current':
+        model.currentSettings[setting] = value
+        break;
+      default:
+        break;
+    }
+  },
+  getSettings(type, setting){
+    let result = 0
+    switch (type) {
+      case 'default':
+        result = model.defaultSettings[setting] 
+        break;
+      case 'current':
+        result = model.currentSettings[setting] 
+        break;
+      default:
+        break;
+    }
+    return result
+  },
   emojis: {
     firstPressAwaits: "🙂",
     secondPressAwaits: "🙂",
@@ -382,11 +418,19 @@ const model = {
     surprise: "😮",
     gameFinished: "😎",
   },
+  getEmoji(){
+    return model.emojis[model.currentStatus]
+  },
   /**
    * mines
    * 存放地雷的編號（第幾個格子）
    */
   mines: [],
+  setMines(mines){
+    model.mines.length = 0
+    model.mines = mines
+  },
+
   /**
    * fields
    * 存放格子內容
@@ -400,16 +444,6 @@ const model = {
    * }
    */
   fields: [],
-  time: 0,
-  timerID: 0,
-
-  messages: {
-    checkInt: "Please type in the positive integer.",
-    checkMineNum: "Bombs should be set up between 2 and ",
-    checkRowNum: "Rows should be more than 2",
-    gameFinished: "Congratulations, You win the game!",
-    gameFailed: "Oh, here is a mine, you lose!",
-  },
   /** 初始化 Model.Fields */
   initFields(rows) {
     this.fields.length = 0;
@@ -424,6 +458,34 @@ const model = {
       };
       this.fields.push(field);
     });
+  },
+  getFields(){
+    return model.fields;
+  },
+  time: 0,
+  setTime(time){
+    model.time = time
+    return model.time
+  },
+  getTime(){
+    return model.time
+  },
+  timerID: 0,
+  setTimerID(id){
+    model.timerID = id
+  },
+  getTimerID(){
+    return model.timerID
+  },
+  messages: {
+    checkInt: "Please type in the positive integer.",
+    checkMineNum: "Bombs should be set up between 2 and ",
+    checkRowNum: "Rows should be more than 2",
+    gameFinished: "Congratulations, You win the game!",
+    gameFailed: "Oh, here is a mine, you lose!",
+  },
+  getMessage(status){
+    return model.messages[status]
   },
 
   /**
@@ -450,7 +512,7 @@ const model = {
     //update number (舊地雷的周邊數字減1)
     let surroundIndexes = utility.getSurroundIndex(
       field.position,
-      settings.currentSettings.rows
+      model.getSettings('current', 'rows')
     );
     let surroundMineCount = 0;
     surroundIndexes.forEach((value) => {
@@ -468,7 +530,7 @@ const model = {
     //update number (新地雷的周邊數字加1)
     surroundIndexes = utility.getSurroundIndex(
       newField.position,
-      settings.currentSettings.rows
+      model.getSettings('current', 'rows')
     );
     model.updateNum(surroundIndexes);
     //update number (舊地雷原本的位置)
